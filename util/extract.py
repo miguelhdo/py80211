@@ -198,6 +198,7 @@ def generate_policy(git):
 	polmap.write('IEEE80211_MAX_DATA_LEN = 2304\n')
 	polmap.write('IEEE80211_MAX_MESH_ID_LEN = 32\n')
 	polmap.write('IEEE80211_MAX_SSID_LEN = 32\n')
+	polmap.write('IEEE80211_QOS_MAP_LEN_MAX = 58\n')
 	polmap.write('NLA_NUL_STRING = NLA_NESTED + 2\n')
 	polmap.write('NLA_BINARY = NLA_NESTED + 3\n\n')
 	for ext in ast.ext:

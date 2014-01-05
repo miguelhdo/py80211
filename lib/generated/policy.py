@@ -2,7 +2,7 @@
 # This file is generated using extract.py using pycparser
 ###########################################################
 # revision:
-#	d0266db Linux 3.12.6
+#	c8bf40a wireless: delete non-required instances of include <linux/init.h>
 ###########################################################
 from netlink.capi import *
 from defs import *
@@ -14,6 +14,7 @@ WLAN_PMKID_LEN = 16
 IEEE80211_MAX_DATA_LEN = 2304
 IEEE80211_MAX_MESH_ID_LEN = 32
 IEEE80211_MAX_SSID_LEN = 32
+IEEE80211_QOS_MAP_LEN_MAX = 58
 NLA_NUL_STRING = NLA_NESTED + 2
 NLA_BINARY = NLA_NESTED + 3
 
@@ -171,6 +172,15 @@ nl80211_policy[ATTR_CH_SWITCH_BLOCK_TX].type = NLA_FLAG
 nl80211_policy[ATTR_CSA_IES].type = NLA_NESTED
 nl80211_policy[ATTR_CSA_C_OFF_BEACON].type = NLA_U16
 nl80211_policy[ATTR_CSA_C_OFF_PRESP].type = NLA_U16
+nl80211_policy[ATTR_STA_SUPPORTED_CHANNELS].type = NLA_BINARY
+nl80211_policy[ATTR_STA_SUPPORTED_OPER_CLASSES].type = NLA_BINARY
+nl80211_policy[ATTR_HANDLE_DFS].type = NLA_FLAG
+nl80211_policy[ATTR_OPMODE_NOTIF].type = NLA_U8
+nl80211_policy[ATTR_VENDOR_ID].type = NLA_U32
+nl80211_policy[ATTR_VENDOR_SUBCMD].type = NLA_U32
+nl80211_policy[ATTR_VENDOR_DATA].type = NLA_BINARY
+nl80211_policy[ATTR_QOS_MAP].type = NLA_BINARY
+nl80211_policy[ATTR_QOS_MAP].len = IEEE80211_QOS_MAP_LEN_MAX
 #
 # policy: nl80211_key_policy
 #
@@ -336,8 +346,9 @@ nl80211_mesh_setup_params_policy[MESH_SETUP_USERSPACE_AMPE].type = NLA_FLAG
 nl80211_txattr_policy = nla_policy_array(TXRATE_MAX + 1)
 nl80211_txattr_policy[TXRATE_LEGACY].type = NLA_BINARY
 nl80211_txattr_policy[TXRATE_LEGACY].len = 32
-nl80211_txattr_policy[TXRATE_MCS].type = NLA_BINARY
-nl80211_txattr_policy[TXRATE_MCS].len = 77
+nl80211_txattr_policy[TXRATE_HT].type = NLA_BINARY
+nl80211_txattr_policy[TXRATE_HT].len = 77
+nl80211_txattr_policy[TXRATE_VHT].len = None
 #
 # policy: nl80211_attr_cqm_policy
 #
