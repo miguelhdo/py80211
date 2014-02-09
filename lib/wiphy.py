@@ -106,15 +106,3 @@ class wiphy_list(ValidHandler):
 			(t,v,tb) = sys.exc_info()
 			print v.message
 			traceback.print_tb(tb)
-
-if __name__ == '__main__':
-	from generated import strmap
-
-	wl = wiphy_list()
-	for w in wl:
-		print('phy#%d: %s' % (w.phynum, str(w)))
-		w.refresh()
-		print('name: %s' % (w.get_nlattr(nl80211.ATTR_WIPHY_NAME)))
-		iftypes = w.get_nlattr(nl80211.ATTR_SUPPORTED_IFTYPES)
-		for ift in iftypes:
-			print('%s' % strmap.nl80211_iftype2str[ift])
