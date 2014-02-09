@@ -25,6 +25,7 @@ nl80211_policy = nla_policy_array(ATTR_MAX + 1)
 nl80211_policy[ATTR_WIPHY].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_NAME].type = NLA_NUL_STRING
 nl80211_policy[ATTR_WIPHY_NAME].len = None
+nl80211_policy[ATTR_WIPHY_BANDS].type = NLA_NESTED
 nl80211_policy[ATTR_WIPHY_TXQ_PARAMS].type = NLA_NESTED
 nl80211_policy[ATTR_WIPHY_FREQ].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_CHANNEL_TYPE].type = NLA_U32

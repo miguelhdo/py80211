@@ -19,12 +19,6 @@ class wiphy_rate(nl80211_object):
 	def __init__(self, attrs):
 		nl80211_object.__init__(self, attrs, rate_policy)
 
-	def __str__(self):
-		s = '%3.1f' % (0.1 * self.attrs[nl80211.BITRATE_ATTR_RATE])
-		if nl80211.BITRATE_ATTR_2GHZ_SHORTPREAMBLE in self.attrs:
-			s += ' (short)'
-		return s
-
 freq_policy = nl.nla_policy_array(nl80211.FREQUENCY_ATTR_MAX + 1)
 freq_policy[nl80211.FREQUENCY_ATTR_FREQ].type = nl.NLA_U32
 freq_policy[nl80211.FREQUENCY_ATTR_DISABLED].type = nl.NLA_FLAG
@@ -45,34 +39,6 @@ class wiphy_freq(nl80211_object):
 	def __init__(self, attrs):
 		nl80211_object.__init__(self, attrs, freq_policy)
 
-	@property
-	def channel(self):
-		freq = self.attrs[nl80211.FREQUENCY_ATTR_FREQ]
-		# see 802.11 17.3.8.3.2 and Annex J
-		if freq == 2484:
-			return 14
-		elif freq < 2484:
-			return (freq - 2407) / 5
-		elif freq >= 4910 and freq <= 4980:
-			return (freq - 4000) / 5
-		elif freq <= 45000:
-			# DMG band lower limit
-			return (freq - 5000) / 5
-		elif freq >= 58320 and freq <= 64800:
-			return (freq - 56160) / 2160
-		else:
-			raise Exception('invalid channel frequency: %d' % freq)
-
-
-	def __str__(self):
-		s = '%6d MHz (%d)' % (self.attrs[nl80211.FREQUENCY_ATTR_FREQ], self.channel)
-		if nl80211.FREQUENCY_ATTR_DISABLED in self.attrs:
-			s += ' (disabled)'
-			return s
-		s += ' [%.2f dBm]' % (0.01 * self.attrs[nl80211.FREQUENCY_ATTR_MAX_TX_POWER])
-		return s
-
-
 band_policy = nl.nla_policy_array(nl80211.BAND_ATTR_MAX + 1)
 band_policy[nl80211.BAND_ATTR_FREQS].type = nl.NLA_NESTED
 band_policy[nl80211.BAND_ATTR_RATES].type = nl.NLA_NESTED
@@ -92,20 +58,6 @@ class wiphy_band(nl80211_object):
 	max_attr = len(band_policy)
 	def __init__(self, attrs):
 		nl80211_object.__init__(self, attrs, band_policy)
-
-	def __str__(self):
-		s = ''
-		if nl80211.BAND_ATTR_HT_CAPA in self.attrs:
-			s += 'ht capability 0x%04x\n' % self.attrs[nl80211.BAND_ATTR_HT_CAPA]
-		if nl80211.BAND_ATTR_VHT_CAPA in self.attrs:
-			s += 'vht capability 0x%08x\n' % self.attrs[nl80211.BAND_ATTR_HT_CAPA]
-		s += 'channels:\n'
-		for f in self.attrs[nl80211.BAND_ATTR_FREQS]:
-			s += '\t%s\n' % str(f)
-		s += 'legacy rates:\n'
-		for r in self.attrs[nl80211.BAND_ATTR_RATES]:
-			s += '\t%s\n' % str(r)
-		return s
 
 class wiphy(nl80211_managed_object):
 	nest_attr_map = {
@@ -154,15 +106,3 @@ class wiphy_list(ValidHandler):
 			(t,v,tb) = sys.exc_info()
 			print v.message
 			traceback.print_tb(tb)
-
-if __name__ == '__main__':
-	from generated import strmap
-
-	wl = wiphy_list()
-	for w in wl:
-		print('phy#%d: %s' % (w.phynum, str(w)))
-		w.refresh()
-		print('name: %s' % (w.get_nlattr(nl80211.ATTR_WIPHY_NAME)))
-		iftypes = w.get_nlattr(nl80211.ATTR_SUPPORTED_IFTYPES)
-		for ift in iftypes:
-			print('%s' % strmap.nl80211_iftype2str[ift])
