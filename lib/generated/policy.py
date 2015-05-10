@@ -2,7 +2,7 @@
 # This file is generated using extract.py using pycparser
 ###########################################################
 # revision:
-#	d0266db Linux 3.12.6
+#	5392bc6 Linux 3.19.1
 ###########################################################
 from netlink.capi import *
 from defs import *
@@ -17,10 +17,16 @@ IEEE80211_MAX_SSID_LEN = 32
 NLA_NUL_STRING = NLA_NESTED + 2
 NLA_BINARY = NLA_NESTED + 3
 
+# taken from cfg80211.h
+# QoS Map Set element length defined in IEEE Std 802.11-2012, 8.4.2.97
+IEEE80211_QOS_MAP_MAX_EX = 21
+IEEE80211_QOS_MAP_LEN_MIN = 16
+IEEE80211_QOS_MAP_LEN_MAX = IEEE80211_QOS_MAP_LEN_MIN + 2 * IEEE80211_QOS_MAP_MAX_EX
+
 #
 # policy: nl80211_policy
 #
-nl80211_policy = nla_policy_array(ATTR_MAX + 1)
+nl80211_policy = nla_policy_array(NUM_NL80211_ATTR)
 nl80211_policy[ATTR_WIPHY].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_NAME].type = NLA_NUL_STRING
 nl80211_policy[ATTR_WIPHY_NAME].len = None
@@ -36,6 +42,7 @@ nl80211_policy[ATTR_WIPHY_RETRY_LONG].type = NLA_U8
 nl80211_policy[ATTR_WIPHY_FRAG_THRESHOLD].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_RTS_THRESHOLD].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_COVERAGE_CLASS].type = NLA_U8
+nl80211_policy[ATTR_WIPHY_DYN_ACK].type = NLA_FLAG
 nl80211_policy[ATTR_SUPPORTED_IFTYPES].type = NLA_NESTED
 nl80211_policy[ATTR_IFTYPE].type = NLA_U32
 nl80211_policy[ATTR_IFINDEX].type = NLA_U32
@@ -140,6 +147,7 @@ nl80211_policy[ATTR_TDLS_DIALOG_TOKEN].type = NLA_U8
 nl80211_policy[ATTR_TDLS_OPERATION].type = NLA_U8
 nl80211_policy[ATTR_TDLS_SUPPORT].type = NLA_FLAG
 nl80211_policy[ATTR_TDLS_EXTERNAL_SETUP].type = NLA_FLAG
+nl80211_policy[ATTR_TDLS_INITIATOR].type = NLA_FLAG
 nl80211_policy[ATTR_DONT_WAIT_FOR_ACK].type = NLA_FLAG
 nl80211_policy[ATTR_PROBE_RESP].type = NLA_BINARY
 nl80211_policy[ATTR_PROBE_RESP].len = IEEE80211_MAX_DATA_LEN
@@ -170,8 +178,28 @@ nl80211_policy[ATTR_PEER_AID].type = NLA_U16
 nl80211_policy[ATTR_CH_SWITCH_COUNT].type = NLA_U32
 nl80211_policy[ATTR_CH_SWITCH_BLOCK_TX].type = NLA_FLAG
 nl80211_policy[ATTR_CSA_IES].type = NLA_NESTED
-nl80211_policy[ATTR_CSA_C_OFF_BEACON].type = NLA_U16
-nl80211_policy[ATTR_CSA_C_OFF_PRESP].type = NLA_U16
+nl80211_policy[ATTR_CSA_C_OFF_BEACON].type = NLA_BINARY
+nl80211_policy[ATTR_CSA_C_OFF_PRESP].type = NLA_BINARY
+nl80211_policy[ATTR_STA_SUPPORTED_CHANNELS].type = NLA_BINARY
+nl80211_policy[ATTR_STA_SUPPORTED_OPER_CLASSES].type = NLA_BINARY
+nl80211_policy[ATTR_HANDLE_DFS].type = NLA_FLAG
+nl80211_policy[ATTR_OPMODE_NOTIF].type = NLA_U8
+nl80211_policy[ATTR_VENDOR_ID].type = NLA_U32
+nl80211_policy[ATTR_VENDOR_SUBCMD].type = NLA_U32
+nl80211_policy[ATTR_VENDOR_DATA].type = NLA_BINARY
+nl80211_policy[ATTR_QOS_MAP].type = NLA_BINARY
+nl80211_policy[ATTR_QOS_MAP].len = IEEE80211_QOS_MAP_LEN_MAX
+nl80211_policy[ATTR_MAC_HINT].len = ETH_ALEN
+nl80211_policy[ATTR_WIPHY_FREQ_HINT].type = NLA_U32
+nl80211_policy[ATTR_TDLS_PEER_CAPABILITY].type = NLA_U32
+nl80211_policy[ATTR_SOCKET_OWNER].type = NLA_FLAG
+nl80211_policy[ATTR_CSA_C_OFFSETS_TX].type = NLA_BINARY
+nl80211_policy[ATTR_USE_RRM].type = NLA_FLAG
+nl80211_policy[ATTR_TSID].type = NLA_U8
+nl80211_policy[ATTR_USER_PRIO].type = NLA_U8
+nl80211_policy[ATTR_ADMITTED_TIME].type = NLA_U16
+nl80211_policy[ATTR_SMPS_MODE].type = NLA_U8
+nl80211_policy[ATTR_MAC_MASK].len = ETH_ALEN
 #
 # policy: nl80211_key_policy
 #
@@ -205,6 +233,7 @@ nl80211_wowlan_policy[WOWLAN_TRIG_EAP_IDENT_REQUEST].type = NLA_FLAG
 nl80211_wowlan_policy[WOWLAN_TRIG_4WAY_HANDSHAKE].type = NLA_FLAG
 nl80211_wowlan_policy[WOWLAN_TRIG_RFKILL_RELEASE].type = NLA_FLAG
 nl80211_wowlan_policy[WOWLAN_TRIG_TCP_CONNECTION].type = NLA_NESTED
+nl80211_wowlan_policy[WOWLAN_TRIG_NET_DETECT].type = NLA_NESTED
 #
 # policy: nl80211_wowlan_tcp_policy
 #
@@ -286,6 +315,7 @@ reg_rule_policy[ATTR_FREQ_RANGE_END].type = NLA_U32
 reg_rule_policy[ATTR_FREQ_RANGE_MAX_BW].type = NLA_U32
 reg_rule_policy[ATTR_POWER_RULE_MAX_ANT_GAIN].type = NLA_U32
 reg_rule_policy[ATTR_POWER_RULE_MAX_EIRP].type = NLA_U32
+reg_rule_policy[ATTR_DFS_CAC_TIME].type = NLA_U32
 #
 # policy: nl80211_meshconf_params_policy
 #
@@ -337,8 +367,10 @@ nl80211_mesh_setup_params_policy[MESH_SETUP_USERSPACE_AMPE].type = NLA_FLAG
 nl80211_txattr_policy = nla_policy_array(TXRATE_MAX + 1)
 nl80211_txattr_policy[TXRATE_LEGACY].type = NLA_BINARY
 nl80211_txattr_policy[TXRATE_LEGACY].len = 32
-nl80211_txattr_policy[TXRATE_MCS].type = NLA_BINARY
-nl80211_txattr_policy[TXRATE_MCS].len = 77
+nl80211_txattr_policy[TXRATE_HT].type = NLA_BINARY
+nl80211_txattr_policy[TXRATE_HT].len = 77
+nl80211_txattr_policy[TXRATE_VHT].len = None
+nl80211_txattr_policy[TXRATE_GI].type = NLA_U8
 #
 # policy: nl80211_attr_cqm_policy
 #
