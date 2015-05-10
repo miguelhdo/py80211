@@ -55,6 +55,25 @@ class access80211(object):
 			self._sock.recvmsgs(self._rx_cb)
 		return err
 
+	def noseq(self, m, a):
+		return nl.NL_OK
+
+	def disable_seq_check(self):
+		self._rx_cb.set_type(nl.NL_CB_SEQ_CHECK, nl.NL_CB_CUSTOM, self.noseq, None)
+
+	def enalbe_seq_check(self):
+		self._rx_cb.set_type(nl.NL_CB_SEQ_CHECK, nl.NL_CB_DEFAULT, None, None)
+
+	def subscribe_multicast(self, mcname):
+		mcid = genl.genl_ctrl_resolve_grp(self._sock._sock, 'nl80211', mcname)
+		nl.nl_socket_add_membership(self._sock._sock, mcid)
+		return mcid
+
+	def drop_multicast(self, mcid):
+		if isinstance(mcid, str):
+			mcid = genl.genl_ctrl_resolve_grp(self._sock._sock, 'nl80211', mcid)
+		nl.nl_socket_drop_membership(self._sock._sock, mcid)
+
 	@property
 	def family(self):
 		""" generic netlink family """
