@@ -25,7 +25,7 @@ bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
 class bss(nl80211_object):
 	pass
 
-class scan_request(ValidHandler):
+class scan_request(custom_handler):
 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
 		self._ifidx = ifidx
 		self._access = access80211(level)

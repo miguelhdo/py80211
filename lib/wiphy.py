@@ -69,7 +69,7 @@ class wiphy(nl80211_managed_object):
 		return self._phynum
 
 
-class wiphy_list(ValidHandler):
+class wiphy_list(custom_handler):
 	def __init__(self, kind=nl.NL_CB_DEFAULT):
 		self._wiphy = {}
 		a = access80211(kind)

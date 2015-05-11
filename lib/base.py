@@ -16,7 +16,7 @@ from abc import *
 class AccessBusyError(Exception):
 	pass
 
-class ValidHandler(object):
+class custom_handler(object):
 	__metaclass__ = ABCMeta
 
 	@abstractmethod
@@ -44,8 +44,8 @@ class access80211(object):
 		return msg
 
 	def send(self, msg, handler):
-		if not isinstance(handler, ValidHandler):
-			raise Exception("provided 'handler' is not a ValidHandler instance")
+		if not isinstance(handler, custom_handler):
+			raise Exception("provided 'handler' is not a custom_handler instance")
 		if self.busy == 1:
 			raise AccessBusyError()
 		self.busy = 1
@@ -140,7 +140,7 @@ class nl80211_object(object):
 	def get_nlattr(self, attr_id):
 		return self._attrs[attr_id]
 
-class nl80211_managed_object(nl80211_object, ValidHandler):
+class nl80211_managed_object(nl80211_object, custom_handler):
 	def __init__(self, access, attrs, policy=None):
 		nl80211_object.__init__(self, attrs, policy)
 		self._access = access
