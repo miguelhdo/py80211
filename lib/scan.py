@@ -41,7 +41,14 @@ bss_policy[nl80211.BSS_SEEN_MS_AGO].type = nl.NLA_U32
 bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
 
 class bss(nl80211_object):
-	pass
+	def __init__(self, attrs, policy):
+		nl80211_object.__init__(self, attrs, policy)
+		# signal level is a signed value so need conversion
+		if nl80211.BSS_SIGNAL_MBM in self._attrs:
+			signal = self._attrs[nl80211.BSS_SIGNAL_MBM]
+			if signal & 0x80000000:
+				signal = -0x80000000 + (signal & 0x7fffffff)
+				self._attrs[nl80211.BSS_SIGNAL_MBM] = signal
 
 class scan_request(custom_handler):
 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
