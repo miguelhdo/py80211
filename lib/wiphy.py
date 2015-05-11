@@ -14,10 +14,7 @@ rate_policy[nl80211.BITRATE_ATTR_RATE].type = nl.NLA_U32
 rate_policy[nl80211.BITRATE_ATTR_2GHZ_SHORTPREAMBLE].type = nl.NLA_FLAG
 
 class wiphy_rate(nl80211_object):
-	policy = rate_policy
-	max_attr = len(rate_policy)
-	def __init__(self, attrs):
-		nl80211_object.__init__(self, attrs, rate_policy)
+	pass
 
 freq_policy = nl.nla_policy_array(nl80211.FREQUENCY_ATTR_MAX + 1)
 freq_policy[nl80211.FREQUENCY_ATTR_FREQ].type = nl.NLA_U32
@@ -34,10 +31,7 @@ freq_policy[nl80211.FREQUENCY_ATTR_DFS_STATE].type = nl.NLA_U32
 freq_policy[nl80211.FREQUENCY_ATTR_DFS_TIME].type = nl.NLA_U32
 
 class wiphy_freq(nl80211_object):
-	policy = freq_policy
-	max_attr = len(freq_policy)
-	def __init__(self, attrs):
-		nl80211_object.__init__(self, attrs, freq_policy)
+	pass
 
 band_policy = nl.nla_policy_array(nl80211.BAND_ATTR_MAX + 1)
 band_policy[nl80211.BAND_ATTR_FREQS].type = nl.NLA_NESTED
@@ -51,17 +45,13 @@ band_policy[nl80211.BAND_ATTR_VHT_CAPA].type = nl.NLA_U32
 
 class wiphy_band(nl80211_object):
 	nest_attr_map = {
-		nl80211.BAND_ATTR_FREQS: wiphy_freq,
-		nl80211.BAND_ATTR_RATES: wiphy_rate,
+		nl80211.BAND_ATTR_FREQS: (wiphy_freq, len(freq_policy), freq_policy),
+		nl80211.BAND_ATTR_RATES: (wiphy_rate, len(rate_policy), rate_policy)
 	}
-	policy = band_policy
-	max_attr = len(band_policy)
-	def __init__(self, attrs):
-		nl80211_object.__init__(self, attrs, band_policy)
 
 class wiphy(nl80211_managed_object):
 	nest_attr_map = {
-		nl80211.ATTR_WIPHY_BANDS: wiphy_band,
+		nl80211.ATTR_WIPHY_BANDS: (wiphy_band, len(band_policy), band_policy)
 	}
 	_cmd = nl80211.CMD_GET_WIPHY
 	def __init__(self, access, attrs):

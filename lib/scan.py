@@ -23,10 +23,7 @@ bss_policy[nl80211.BSS_SEEN_MS_AGO].type = nl.NLA_U32
 bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
 
 class bss(nl80211_object):
-	policy = bss_policy
-	max_attr = len(bss_policy)
-	def __init__(self, attrs):
-		nl80211_object.__init__(self, attrs, bss_policy)
+	pass
 
 class scan_request(ValidHandler):
 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
@@ -109,8 +106,8 @@ class scan_request(ValidHandler):
 			e, attrs = genl.py_genlmsg_parse(nl.nlmsg_hdr(msg), 0, nl80211.ATTR_MAX, None)
 			if not nl80211.ATTR_BSS in attrs:
 				return
-			e, nattrs = nl.py_nla_parse_nested(bss.max_attr, attrs[nl80211.ATTR_BSS], bss.policy)
-			self.bss_list.append(bss(nattrs))
+			e, nattrs = nl.py_nla_parse_nested(len(bss_policy), attrs[nl80211.ATTR_BSS], bss_policy)
+			self.bss_list.append(bss(nattrs, bss_policy))
 		except Exception as e:
 			(t,v,tb) = sys.exc_info()
 			print v.message

@@ -100,14 +100,14 @@ class nl80211_object(object):
 	def store_nested(self, attr, aid):
 		nest_class = None
 		if aid in self.nest_attr_map.keys():
-			nest_class = self.nest_attr_map[aid]
+			(nest_class, max_nest, nest_policy) = self.nest_attr_map[aid]
 		self._attrs[aid] = []
 		for nest_element in nl.nla_get_nested(attr):
 			if nest_class == None:
 				self._attrs[aid].append(nl.nla_type(nest_element))
 			else:
-				e, nattr = nl.py_nla_parse_nested(nest_class.max_attr, nest_element, nest_class.policy)
-				self._attrs[aid].append(nest_class(nattr))
+				e, nattr = nl.py_nla_parse_nested(max_nest, nest_element, nest_policy)
+				self._attrs[aid].append(nest_class(nattr, nest_policy))
 
 	def store_attrs(self, attrs):
 		for attr in attrs.keys():
