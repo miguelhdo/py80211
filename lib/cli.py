@@ -132,3 +132,40 @@ class wiphy_info(object):
 
 	def __str__(self):
 		"phy%d" % self._wiphy.phynum
+
+WLAN_EID_SSID = 0
+WLAN_EID_COUNTRY = 7
+
+class bss_info(object):
+	def __init__(self, bss):
+		self._bss = bss
+
+	def find_ie(self, ies, eid):
+		while len(ies) > 2 and ies[0] != eid:
+			ies = ies[ies[1]+2:]
+		if len(ies) < 2:
+			return None
+		if len(ies) < 2 + ies[1]:
+			return None
+		return ies[0:2+ies[1]]
+
+	def __str__(self):
+		s = ''
+		bssid = self._bss.attrs[nl80211.BSS_BSSID]
+		s = 'BSS: %02x' % bssid[0]
+		for b in bssid[1:6]:
+			s += ':%02x' % b
+		ies = self._bss.attrs[nl80211.BSS_INFORMATION_ELEMENTS]
+		ssid = self.find_ie(ies, WLAN_EID_SSID)
+		s += '\n SSID: %s' % str(ssid[2:])
+		s += '\n Freq: %d MHz' % self._bss.attrs[nl80211.BSS_FREQUENCY]
+		country = self.find_ie(ies, WLAN_EID_COUNTRY)
+		if country:
+			s += '\n Country: %s' % str(country[2:4])
+		s += '\n Interval: %d' % self._bss.attrs[nl80211.BSS_BEACON_INTERVAL]
+		s += '\n TSF: %d' % self._bss.attrs[nl80211.BSS_TSF]
+		s += '\n Last seen: %d ms' % self._bss.attrs[nl80211.BSS_SEEN_MS_AGO]
+		if nl80211.BSS_SIGNAL_MBM in self._bss.attrs:
+			s += '\n Signal: %d dBm' % (self._bss.attrs[nl80211.BSS_SIGNAL_MBM] / 100)
+		return s
+
