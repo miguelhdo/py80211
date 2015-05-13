@@ -50,6 +50,42 @@ class bss(nl80211_object):
 				signal = -0x80000000 + (signal & 0x7fffffff)
 				self._attrs[nl80211.BSS_SIGNAL_MBM] = signal
 
+class bss_list(custom_handler):
+	def __init__(self, ifidx, kind=nl.NL_CB_DEFAULT):
+		self._access = access80211(kind)
+		self._ifidx = ifidx
+		self.refresh()
+
+	def __iter__(self):
+		return iter(self._bss)
+
+	def find_status_bss(self):
+		self.refresh()
+		for bss in self._bss:
+			if nl80211.BSS_STATUS in bss.attrs:
+				return bss
+		return None
+
+	def refresh(self):
+		self._bss = []
+                flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK | nlc.NLM_F_DUMP
+                m = self._access.alloc_genlmsg(nl80211.CMD_GET_SCAN, flags)
+                nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
+		self._access.send(m, self)
+		
+	def handle(self, msg, arg):
+		try:
+			e, attrs = genl.py_genlmsg_parse(nl.nlmsg_hdr(msg), 0, nl80211.ATTR_MAX, None)
+			if not nl80211.ATTR_BSS in attrs:
+				return
+			e, nattrs = nl.py_nla_parse_nested(len(bss_policy), attrs[nl80211.ATTR_BSS], bss_policy)
+			self._bss.append(bss(nattrs, bss_policy))
+		except Exception as e:
+			(t,v,tb) = sys.exc_info()
+			print v.message
+			traceback.print_tb(tb)
+		return nl.NL_SKIP
+
 class scan_request(custom_handler):
 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
 		self._ifidx = ifidx
@@ -115,37 +151,15 @@ class scan_request(custom_handler):
 		ret = self._access.send(m, self)
 		if ret < 0:
 			self.scan_busy = False
-			return None
+			return ret
 
 		self.wait_for_scan_completion()
-		self.bss_list = []
 		self._access.drop_multicast(mcid)
-                flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK | nlc.NLM_F_DUMP
-                m = self._access.alloc_genlmsg(nl80211.CMD_GET_SCAN, flags)
-                nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
-		self._access.send(m, self)
-		return self.bss_list
-
-	def get_scan(self, msg):
-		try:
-			e, attrs = genl.py_genlmsg_parse(nl.nlmsg_hdr(msg), 0, nl80211.ATTR_MAX, None)
-			if not nl80211.ATTR_BSS in attrs:
-				return
-			e, nattrs = nl.py_nla_parse_nested(len(bss_policy), attrs[nl80211.ATTR_BSS], bss_policy)
-			self.bss_list.append(bss(nattrs, bss_policy))
-		except Exception as e:
-			(t,v,tb) = sys.exc_info()
-			print v.message
-			traceback.print_tb(tb)
+		return 0
 
 	def handle(self, msg, arg):
 		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
-		if genlh.cmd == nl80211.CMD_SCAN_ABORTED:
+		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
 			self.scan_busy = False
-		elif genlh.cmd == nl80211.CMD_NEW_SCAN_RESULTS:
-			if self.scan_busy:
-				self.scan_busy = False
-			else:
-				self.get_scan(msg)
 		return nl.NL_SKIP
 

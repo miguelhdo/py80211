@@ -15,7 +15,7 @@ def find_ie(ies, eid):
 ifidx = nl.if_nametoindex(sys.argv[1])
 rh = scan_request(ifidx)
 rh.add_ssids(['Ziggo'])
-sr = rh.send()
-for bss in sr:
-	print str(bss_info(bss))
-
+err = rh.send()
+if err == 0:
+	for bss in bss_list(ifidx):
+		print str(bss_info(bss))
