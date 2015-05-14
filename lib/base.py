@@ -155,20 +155,26 @@ class nl80211_object(object):
 		self.store_attrs(attrs)
 
 	##
-	# Stores a nested attribute parsing each nest element according
-	# the policy from nest_attr_map and storing new instance of the
-	# specified class for the nested attribute.
-	def store_nested(self, attr, aid):
-		nest_class = None
-		if aid in self.nest_attr_map.keys():
-			(nest_class, max_nest, nest_policy) = self.nest_attr_map[aid]
-		self._attrs[aid] = []
-		for nest_element in nl.nla_get_nested(attr):
-			if nest_class == None:
-				self._attrs[aid].append(nl.nla_type(nest_element))
-			else:
-				e, nattr = nl.py_nla_parse_nested(max_nest, nest_element, nest_policy)
-				self._attrs[aid].append(nest_class(nattr, nest_policy))
+	# Creates a new instance for the nested attribute according
+	# the nest_attr_map.
+	def create_nested(self, attr, aid):
+		try:
+			if aid in self.nest_attr_map.keys():
+				(nest_class, max_nest, nest_policy) = self.nest_attr_map[aid]
+			e, nattr = nl.py_nla_parse_nested(max_nest, attr, nest_policy)
+			return nest_class(nattr, nest_policy)
+		except Exception as e:
+			return nl.nla_type(attr)
+
+	##
+	# Creates a nested attribute list adding a new instance
+	# for each nested element.
+	def create_nested_list(self, attr_list, aid):
+		nest_list = []
+		for nest_element in nl.nla_get_nested(attr_list):
+			nest_obj = self.create_nested(nest_element, aid)
+			nest_list.append(nest_obj)
+		return nest_list
 
 	##
 	# Do a 2s complement sign conversion 
@@ -204,7 +210,11 @@ class nl80211_object(object):
 				elif pol.type == nl.NLA_FLAG:
 					self._attrs[attr] = True
 				elif pol.type == nl.NLA_NESTED:
-					self.store_nested(attrs[attr], attr)
+					if hasattr(pol, 'single') and pol.single:
+						obj = self.create_nested(attrs[attr], attr)
+					else:
+						obj = self.create_nested_list(attrs[attr], attr)
+					self._attrs[attr] = obj
 				elif pol.type in [ NLA_BINARY, nl.NLA_UNSPEC ]:
 					self._attrs[attr] = nl.nla_data(attrs[attr])
 				if hasattr(pol, 'signed') and pol.signed:
