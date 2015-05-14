@@ -40,6 +40,8 @@ bss_policy[nl80211.BSS_SIGNAL_UNSPEC].type = nl.NLA_U8
 bss_policy[nl80211.BSS_STATUS].type = nl.NLA_U32
 bss_policy[nl80211.BSS_SEEN_MS_AGO].type = nl.NLA_U32
 bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
+bss_policy[nl80211.BSS_BEACON_TSF].type = nl.NLA_U64
+bss_policy[nl80211.BSS_CHAN_WIDTH].type = nl.NLA_U32
 
 class bss(nl80211_object):
 	pass

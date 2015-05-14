@@ -136,6 +136,17 @@ class wiphy_info(object):
 WLAN_EID_SSID = 0
 WLAN_EID_COUNTRY = 7
 
+chanwidth2str = [
+	'20 MHz (no-ht)',
+	'20 MHz',
+	'40 MHz',
+	'80 MHz',
+	'80+80 MHz',
+	'160 MHz',
+	'5 MHz',
+	'10 MHz'
+]
+
 class bss_info(object):
 	def __init__(self, bss):
 		self._bss = bss
@@ -159,6 +170,7 @@ class bss_info(object):
 		ssid = self.find_ie(ies, WLAN_EID_SSID)
 		s += '\n SSID: %s' % str(ssid[2:])
 		s += '\n Freq: %d MHz' % self._bss.attrs[nl80211.BSS_FREQUENCY]
+		s += ' @ %s' % chanwidth2str[self._bss.attrs[nl80211.BSS_CHAN_WIDTH]]
 		country = self.find_ie(ies, WLAN_EID_COUNTRY)
 		if country:
 			s += '\n Country: %s' % str(country[2:4])
