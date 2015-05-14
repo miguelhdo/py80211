@@ -35,20 +35,14 @@ bss_policy[nl80211.BSS_BEACON_INTERVAL].type = nl.NLA_U16
 bss_policy[nl80211.BSS_CAPABILITY].type = nl.NLA_U16
 bss_policy[nl80211.BSS_INFORMATION_ELEMENTS].type = nl.NLA_UNSPEC
 bss_policy[nl80211.BSS_SIGNAL_MBM].type = nl.NLA_U32
+bss_policy[nl80211.BSS_SIGNAL_MBM].signed = True
 bss_policy[nl80211.BSS_SIGNAL_UNSPEC].type = nl.NLA_U8
 bss_policy[nl80211.BSS_STATUS].type = nl.NLA_U32
 bss_policy[nl80211.BSS_SEEN_MS_AGO].type = nl.NLA_U32
 bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
 
 class bss(nl80211_object):
-	def __init__(self, attrs, policy):
-		nl80211_object.__init__(self, attrs, policy)
-		# signal level is a signed value so need conversion
-		if nl80211.BSS_SIGNAL_MBM in self._attrs:
-			signal = self._attrs[nl80211.BSS_SIGNAL_MBM]
-			if signal & 0x80000000:
-				signal = -0x80000000 + (signal & 0x7fffffff)
-				self._attrs[nl80211.BSS_SIGNAL_MBM] = signal
+	pass
 
 class bss_list(custom_handler):
 	def __init__(self, ifidx, kind=nl.NL_CB_DEFAULT):

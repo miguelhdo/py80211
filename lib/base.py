@@ -171,6 +171,20 @@ class nl80211_object(object):
 				self._attrs[aid].append(nest_class(nattr, nest_policy))
 
 	##
+	# Do a 2s complement sign conversion 
+	def convert_sign(self, aid, pol_type):
+		conv_tab = {
+			nl.NLA_U32: 0x80000000,
+			nl.NLA_U16: 0x8000,
+			nl.NLA_U8: 0x80
+		}
+		if not pol_type in conv_tab:
+			raise Exception("invalid type (%d) for sign conversion" % pol_type)
+		conv_check = conv_tab[pol_type]
+		if self._attrs[aid] & conv_check:
+			self._attrs[aid] = -conv_check + (self._attrs[aid] & (conv_check - 1))
+
+	##
 	# Stores the attributes using the appropriate nla_get function
 	# according the provided policy.
 	def store_attrs(self, attrs):
@@ -193,6 +207,8 @@ class nl80211_object(object):
 					self.store_nested(attrs[attr], attr)
 				elif pol.type in [ NLA_BINARY, nl.NLA_UNSPEC ]:
 					self._attrs[attr] = nl.nla_data(attrs[attr])
+				if hasattr(pol, 'signed') and pol.signed:
+					self.convert_sign(attr, pol.type)
 			except Exception as e:
 				print e.message
 				self._attrs[attr] = nl.nla_data(attrs[attr])
