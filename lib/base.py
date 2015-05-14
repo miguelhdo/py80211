@@ -152,7 +152,8 @@ class nl80211_object(object):
 	def __init__(self, attrs, policy=None):
 		self._attrs = {}
 		self._policy = policy
-		self.store_attrs(attrs)
+		if attrs != None:
+			self.store_attrs(attrs)
 
 	##
 	# Creates a new instance for the nested attribute according
@@ -274,7 +275,10 @@ class nl80211_object(object):
 class nl80211_managed_object(nl80211_object, custom_handler):
 	def __init__(self, access, attrs, policy=None):
 		nl80211_object.__init__(self, attrs, policy)
-		self._access = access
+		if access == None:
+			self._access = access80211()
+		else:
+			self._access = access
 
 	##
 	# Property (GET) to obtain command.
