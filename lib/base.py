@@ -177,18 +177,48 @@ class nl80211_object(object):
 		return nest_list
 
 	##
-	# Do a 2s complement sign conversion 
-	def convert_sign(self, aid, pol_type):
+	# Creates a list of attributes that are a basic type.
+	def create_list(self, attr_list, pol):
+		nest_list = []
+		item_type = pol.list_type
+		for item in nl.nla_get_nested(attr_list):
+			if item_type == NLA_NUL_STRING:
+				nest_obj = nl.nla_get_string(item)
+			elif item_type == nl.NLA_U64:
+				nest_obj = nl.nla_get_u64(item)
+			elif item_type == nl.NLA_U32:
+				nest_obj = nl.nla_get_u32(item)
+			elif item_type == nl.NLA_U16:
+				nest_obj = nl.nla_get_u16(item)
+			elif item_type == nl.NLA_U8:
+				nest_obj = nl.nla_get_u8(item)
+			else:
+				raise Exception("type (%d) not supported for list" % item_type)
+			nest_list.append(nest_obj)
+		return nest_list
+
+	##
+	# Do a 2s complement sign conversion on attribute
+	# which may be a list of values.
+	def convert_sign(self, attr, pol):
 		conv_tab = {
 			nl.NLA_U32: 0x80000000,
 			nl.NLA_U16: 0x8000,
 			nl.NLA_U8: 0x80
 		}
+		pol_type = pol.type
+		if pol.type == nl.NLA_NESTED:
+			pol_type = pol.list_type
 		if not pol_type in conv_tab:
 			raise Exception("invalid type (%d) for sign conversion" % pol_type)
 		conv_check = conv_tab[pol_type]
-		if self._attrs[aid] & conv_check:
-			self._attrs[aid] = -conv_check + (self._attrs[aid] & (conv_check - 1))
+		if pol.type != nl.NLA_NESTED:
+			if attr & conv_check:
+				return -conv_check + (attr & (conv_check - 1))
+		else:
+			for aid in range(len(attr)):
+				attr[aid] = -conv_check + (attr[aid] & (conv_check - 1))
+		return attr
 
 	##
 	# Stores the attributes using the appropriate nla_get function
@@ -212,13 +242,15 @@ class nl80211_object(object):
 				elif pol.type == nl.NLA_NESTED:
 					if hasattr(pol, 'single') and pol.single:
 						obj = self.create_nested(attrs[aid], aid)
+					elif hasattr(pol, 'list_type'):
+						obj = self.create_list(attrs[aid], pol)
 					else:
 						obj = self.create_nested_list(attrs[aid], aid)
 					self._attrs[aid] = obj
 				elif pol.type in [ NLA_BINARY, nl.NLA_UNSPEC ]:
 					self._attrs[aid] = nl.nla_data(attrs[aid])
 				if hasattr(pol, 'signed') and pol.signed:
-					self.convert_sign(aid, pol.type)
+					self._attrs[aid] = self.convert_sign(self._attrs[aid], pol)
 			except Exception as e:
 				print e.message
 				self._attrs[aid] = nl.nla_data(attrs[aid])
