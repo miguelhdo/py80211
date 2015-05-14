@@ -194,34 +194,34 @@ class nl80211_object(object):
 	# Stores the attributes using the appropriate nla_get function
 	# according the provided policy.
 	def store_attrs(self, attrs):
-		for attr in attrs.keys():
+		for aid in attrs.keys():
 			try:
-				pol = self._policy[attr]
+				pol = self._policy[aid]
 				if pol.type == NLA_NUL_STRING:
-					self._attrs[attr] = nl.nla_get_string(attrs[attr])
+					self._attrs[aid] = nl.nla_get_string(attrs[aid])
 				elif pol.type == nl.NLA_U64:
-					self._attrs[attr] = nl.nla_get_u64(attrs[attr])
+					self._attrs[aid] = nl.nla_get_u64(attrs[aid])
 				elif pol.type == nl.NLA_U32:
-					self._attrs[attr] = nl.nla_get_u32(attrs[attr])
+					self._attrs[aid] = nl.nla_get_u32(attrs[aid])
 				elif pol.type == nl.NLA_U16:
-					self._attrs[attr] = nl.nla_get_u16(attrs[attr])
+					self._attrs[aid] = nl.nla_get_u16(attrs[aid])
 				elif pol.type == nl.NLA_U8:
-					self._attrs[attr] = nl.nla_get_u8(attrs[attr])
+					self._attrs[aid] = nl.nla_get_u8(attrs[aid])
 				elif pol.type == nl.NLA_FLAG:
-					self._attrs[attr] = True
+					self._attrs[aid] = True
 				elif pol.type == nl.NLA_NESTED:
 					if hasattr(pol, 'single') and pol.single:
-						obj = self.create_nested(attrs[attr], attr)
+						obj = self.create_nested(attrs[aid], aid)
 					else:
-						obj = self.create_nested_list(attrs[attr], attr)
-					self._attrs[attr] = obj
+						obj = self.create_nested_list(attrs[aid], aid)
+					self._attrs[aid] = obj
 				elif pol.type in [ NLA_BINARY, nl.NLA_UNSPEC ]:
-					self._attrs[attr] = nl.nla_data(attrs[attr])
+					self._attrs[aid] = nl.nla_data(attrs[aid])
 				if hasattr(pol, 'signed') and pol.signed:
-					self.convert_sign(attr, pol.type)
+					self.convert_sign(aid, pol.type)
 			except Exception as e:
 				print e.message
-				self._attrs[attr] = nl.nla_data(attrs[attr])
+				self._attrs[aid] = nl.nla_data(attrs[aid])
 
 	##
 	# Property (GET) for obtaining the attributes.
