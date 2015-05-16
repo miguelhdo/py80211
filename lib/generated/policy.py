@@ -203,6 +203,11 @@ nl80211_policy[ATTR_USER_PRIO].type = NLA_U8
 nl80211_policy[ATTR_ADMITTED_TIME].type = NLA_U16
 nl80211_policy[ATTR_SMPS_MODE].type = NLA_U8
 nl80211_policy[ATTR_MAC_MASK].len = ETH_ALEN
+nl80211_policy[ATTR_GENERATION].type = NLA_U32
+nl80211_policy[ATTR_MAX_NUM_SCAN_SSIDS].type = NLA_U8
+nl80211_policy[ATTR_SUPPORT_AP_UAPSD].type = NLA_FLAG
+nl80211_policy[ATTR_MAX_MATCH_SETS].type = NLA_U8
+nl80211_policy[ATTR_FEATURE_FLAGS].type = NLA_U32
 #
 # policy: nl80211_key_policy
 #

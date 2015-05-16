@@ -86,6 +86,9 @@ class wiphy(nl80211_managed_object):
 	def __hash__(self):
 		return self._phynum
 
+	def is_feature_supported(self, feature):
+		flags = self.attrs[nl80211.ATTR_FEATURE_FLAGS]
+		return (flags & feature) != 0
 
 class wiphy_list(custom_handler):
 	def __init__(self, kind=nl.NL_CB_DEFAULT):
