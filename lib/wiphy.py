@@ -67,6 +67,13 @@ class wiphy_band(nl80211_object):
 		nl80211.BAND_ATTR_RATES: (wiphy_rate, len(rate_policy), rate_policy)
 	}
 
+iface_limit_policy = nl.nla_policy_array(nl80211.NUM_NL80211_IFACE_LIMIT)
+iface_limit_policy[nl80211.IFACE_LIMIT_TYPES].type = nl.NLA_NESTED
+iface_limit_policy[nl80211.IFACE_LIMIT_MAX].type = nl.NLA_U32
+
+class wiphy_iface_limit(nl80211_object):
+	pass
+
 iface_combination_policy = nl.nla_policy_array(nl80211.NUM_NL80211_IFACE_COMB)
 iface_combination_policy[nl80211.IFACE_COMB_LIMITS].type = nl.NLA_NESTED
 iface_combination_policy[nl80211.IFACE_COMB_MAXNUM].type = nl.NLA_U32
@@ -75,7 +82,9 @@ iface_combination_policy[nl80211.IFACE_COMB_NUM_CHANNELS].type = nl.NLA_U32
 iface_combination_policy[nl80211.IFACE_COMB_RADAR_DETECT_WIDTHS].type = nl.NLA_U32
 
 class wiphy_iface_combo(nl80211_object):
-	pass
+	nest_attr_map = {
+		nl80211.IFACE_COMB_LIMITS: (wiphy_iface_limit, len(iface_limit_policy), iface_limit_policy),
+	}
 
 wowlan_policy = nl.nla_policy_array(nl80211.NUM_NL80211_WOWLAN_TRIG)
 wowlan_policy[nl80211.WOWLAN_TRIG_ANY].type = nl.NLA_FLAG
