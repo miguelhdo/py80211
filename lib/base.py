@@ -222,6 +222,12 @@ class nl80211_object(object):
 		return attr
 
 	##
+	# Called after storing the netlink attributes. This allows doing any custom
+	# post-processing of the netlink attributes by overriding this method.
+	def post_store_attrs(self, attrs):
+		pass
+
+	##
 	# Stores the attributes using the appropriate nla_get function
 	# according the provided policy.
 	def store_attrs(self, attrs):
@@ -255,6 +261,7 @@ class nl80211_object(object):
 			except Exception as e:
 				print e.message
 				self._attrs[aid] = nl.nla_data(attrs[aid])
+		self.post_store_attrs(attrs)
 
 	##
 	# Property (GET) for obtaining the attributes.
