@@ -67,9 +67,36 @@ class wiphy_band(nl80211_object):
 		nl80211.BAND_ATTR_RATES: (wiphy_rate, len(rate_policy), rate_policy)
 	}
 
+iface_combination_policy = nl.nla_policy_array(nl80211.NUM_NL80211_IFACE_COMB)
+iface_combination_policy[nl80211.IFACE_COMB_LIMITS].type = nl.NLA_NESTED
+iface_combination_policy[nl80211.IFACE_COMB_MAXNUM].type = nl.NLA_U32
+iface_combination_policy[nl80211.IFACE_COMB_STA_AP_BI_MATCH].type = nl.NLA_FLAG
+iface_combination_policy[nl80211.IFACE_COMB_NUM_CHANNELS].type = nl.NLA_U32
+iface_combination_policy[nl80211.IFACE_COMB_RADAR_DETECT_WIDTHS].type = nl.NLA_U32
+
+class wiphy_iface_combo(nl80211_object):
+	pass
+
+wowlan_policy = nl.nla_policy_array(nl80211.NUM_NL80211_WOWLAN_TRIG)
+wowlan_policy[nl80211.WOWLAN_TRIG_ANY].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_DISCONNECT].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_MAGIC_PKT].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_PKT_PATTERN].minlen = 12
+wowlan_policy[nl80211.WOWLAN_TRIG_GTK_REKEY_SUPPORTED].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_GTK_REKEY_FAILURE].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_EAP_IDENT_REQUEST].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_4WAY_HANDSHAKE].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_RFKILL_RELEASE].type = nl.NLA_FLAG
+wowlan_policy[nl80211.WOWLAN_TRIG_NET_DETECT].type = nl.NLA_FLAG
+
+class wowlan_trigger_support(nl80211_object):
+	pass
+
 class wiphy(nl80211_managed_object):
 	nest_attr_map = {
-		nl80211.ATTR_WIPHY_BANDS: (wiphy_band, len(band_policy), band_policy)
+		nl80211.ATTR_WIPHY_BANDS: (wiphy_band, len(band_policy), band_policy),
+		nl80211.ATTR_INTERFACE_COMBINATIONS: (wiphy_iface_combo, len(iface_combination_policy), iface_combination_policy),
+		nl80211.ATTR_WOWLAN_TRIGGERS_SUPPORTED: (wowlan_trigger_support, len(wowlan_policy), wowlan_policy)
 	}
 	_cmd = nl80211.CMD_GET_WIPHY
 	def __init__(self, access, attrs):
@@ -89,6 +116,9 @@ class wiphy(nl80211_managed_object):
 	def is_feature_supported(self, feature):
 		flags = self.attrs[nl80211.ATTR_FEATURE_FLAGS]
 		return (flags & feature) != 0
+
+	def is_cmd_supported(self, cmd):
+		return cmd in self.attrs[nl80211.ATTR_SUPPORTED_COMMANDS]
 
 class wiphy_list(custom_handler):
 	def __init__(self, kind=nl.NL_CB_DEFAULT):
