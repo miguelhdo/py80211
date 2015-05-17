@@ -9,6 +9,7 @@ from defs import *
 
 # defines used in nl80211.c
 ETH_ALEN = 6
+IFNAMSIZ = 16
 WLAN_MAX_KEY_LEN = 32
 WLAN_PMKID_LEN = 16
 IEEE80211_MAX_DATA_LEN = 2304
@@ -29,7 +30,7 @@ IEEE80211_QOS_MAP_LEN_MAX = IEEE80211_QOS_MAP_LEN_MIN + 2 * IEEE80211_QOS_MAP_MA
 nl80211_policy = nla_policy_array(NUM_NL80211_ATTR)
 nl80211_policy[ATTR_WIPHY].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_NAME].type = NLA_NUL_STRING
-nl80211_policy[ATTR_WIPHY_NAME].min_len = None
+nl80211_policy[ATTR_WIPHY_NAME].min_len = 20 - 1
 nl80211_policy[ATTR_WIPHY_BANDS].type = NLA_NESTED
 nl80211_policy[ATTR_WIPHY_TXQ_PARAMS].type = NLA_NESTED
 nl80211_policy[ATTR_WIPHY_FREQ].type = NLA_U32
@@ -47,7 +48,7 @@ nl80211_policy[ATTR_SUPPORTED_IFTYPES].type = NLA_NESTED
 nl80211_policy[ATTR_IFTYPE].type = NLA_U32
 nl80211_policy[ATTR_IFINDEX].type = NLA_U32
 nl80211_policy[ATTR_IFNAME].type = NLA_NUL_STRING
-nl80211_policy[ATTR_IFNAME].min_len = None
+nl80211_policy[ATTR_IFNAME].min_len = IFNAMSIZ - 1
 nl80211_policy[ATTR_MAC].min_len = ETH_ALEN
 nl80211_policy[ATTR_PREV_BSSID].min_len = ETH_ALEN
 nl80211_policy[ATTR_KEY].type = NLA_NESTED

@@ -79,13 +79,21 @@ def oper_str(oper):
 		return str(oper.value)
 	elif isinstance(oper, c_ast.ID):
 		return rmpfx(oper.name)
+	elif isinstance(oper, c_ast.BinaryOp):
+		return binary_oper_str(oper)
 	return None
+
+def binary_oper_str(op):
+	c = op.children()
+	left = c[0][1]
+	right = c[1][1]
+	return '%s %s %s' % (oper_str(left), op.op, oper_str(right))
 
 def dump_binary_op(out, e, op):
 	c = op.children()
 	left = c[0][1]
 	right = c[1][1]
-	out.write('%s = %s %s %s\n' % (rmpfx(e.name), oper_str(left), op.op, oper_str(right)))
+	out.write('%s = %s\n' % (rmpfx(e.name), binary_oper_str(op)))
 
 def dump_enum(out, enum):
 	id = 0
@@ -150,14 +158,7 @@ def generate_strmap(git, ast):
 def dump_policy_array(out, decl):
 	out.write('#\n# policy: %s\n#\n' % decl.name)
 	out.write('%s = nla_policy_array(' % decl.name)
-	typ = type(decl.type.dim)
-	if typ == c_ast.BinaryOp:
-		c = decl.type.dim.children()
-		left = c[0][1]
-		right = c[1][1]
-		out.write('%s %s %s' % (oper_str(left), decl.type.dim.op, oper_str(right)))
-	elif typ == c_ast.ID:
-		out.write('%s' % oper_str(decl.type.dim))
+	out.write('%s' % oper_str(decl.type.dim))
 	out.write(')\n')
 	for exp in decl.init.exprs:
 		comma_prefix = False
