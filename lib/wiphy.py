@@ -129,23 +129,6 @@ class wiphy(nl80211_managed_object):
 	def is_cmd_supported(self, cmd):
 		return cmd in self.attrs[nl80211.ATTR_SUPPORTED_COMMANDS]
 
-	def handle_frame_types(self, aid, attrs):
-		ft_map = {}
-		for ft_attr in nl.nla_get_nested(attrs[aid]):
-			iftype = nl.nla_type(ft_attr)
-			ft_list = []
-			for ft in nl.nla_get_nested(ft_attr):
-				ft_list.append(nl.nla_get_u16(ft))
-			if len(ft_list) > 0:
-				ft_map[iftype] = ft_list
-		self._attrs[aid] = ft_map
-
-	def post_store_attrs(self, attrs):
-		if nl80211.ATTR_TX_FRAME_TYPES in attrs:
-			self.handle_frame_types(nl80211.ATTR_TX_FRAME_TYPES, attrs)
-		if nl80211.ATTR_RX_FRAME_TYPES in attrs:
-			self.handle_frame_types(nl80211.ATTR_RX_FRAME_TYPES, attrs)
-
 class wiphy_list(custom_handler):
 	def __init__(self, kind=nl.NL_CB_DEFAULT):
 		self._wiphy = {}

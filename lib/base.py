@@ -198,6 +198,14 @@ class nl80211_object(object):
 			nest_list.append(nest_obj)
 		return nest_list
 
+	def create_map(self, map_attr, pol):
+		nest_map = {}
+		for key in nl.nla_get_nested(map_attr):
+			nest_list = self.create_list(key, pol)
+			if len(nest_list) > 0:
+				nest_map[nl.nla_type(key)] = nest_list
+		return nest_map
+
 	##
 	# Do a 2s complement sign conversion on attribute
 	# which may be a list of values.
@@ -249,6 +257,10 @@ class nl80211_object(object):
 				elif pol.type == nl.NLA_NESTED:
 					if hasattr(pol, 'single') and pol.single:
 						obj = self.create_nested(attrs[aid], aid)
+					elif hasattr(pol, 'map') and pol.map:
+						if not hasattr(pol, 'list_type'):
+							raise Exception('need to specify "list_type" for map')
+						obj = self.create_map(attrs[aid], pol)
 					elif hasattr(pol, 'list_type'):
 						obj = self.create_list(attrs[aid], pol)
 					else:

@@ -223,6 +223,12 @@ nl80211_policy[ATTR_MAX_NUM_SCHED_SCAN_SSIDS].type = NLA_U8
 nl80211_policy[ATTR_MAX_SCHED_SCAN_IE_LEN].type = NLA_U16
 nl80211_policy[ATTR_MAX_CSA_COUNTERS].type = NLA_U8
 nl80211_policy[ATTR_SOFTWARE_IFTYPES].type = NLA_NESTED
+nl80211_policy[ATTR_TX_FRAME_TYPES].type = NLA_NESTED
+nl80211_policy[ATTR_TX_FRAME_TYPES].map = True
+nl80211_policy[ATTR_TX_FRAME_TYPES].list_type = NLA_U16
+nl80211_policy[ATTR_RX_FRAME_TYPES].type = NLA_NESTED
+nl80211_policy[ATTR_RX_FRAME_TYPES].map = True
+nl80211_policy[ATTR_RX_FRAME_TYPES].list_type = NLA_U16
 #
 # policy: nl80211_key_policy
 #
