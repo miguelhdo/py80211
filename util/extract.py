@@ -162,7 +162,11 @@ def dump_policy_array(out, decl):
 	for exp in decl.init.exprs:
 		comma_prefix = False
 		for initexp in exp.expr.exprs:
-			out.write('%s[%s].%s = ' % (decl.name, oper_str(exp.name[0]), oper_str(initexp.name[0])))
+			# kernel policy member 'len' is called 'min_len' in libnl
+			field = oper_str(initexp.name[0])
+			if field == 'len':
+				field = 'min_len'
+			out.write('%s[%s].%s = ' % (decl.name, oper_str(exp.name[0]), field))
 			out.write('%s\n' % oper_str(initexp.expr))
 
 def generate_policy(git):
