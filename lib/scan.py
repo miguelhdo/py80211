@@ -42,6 +42,7 @@ bss_policy[nl80211.BSS_SEEN_MS_AGO].type = nl.NLA_U32
 bss_policy[nl80211.BSS_BEACON_IES].type = nl.NLA_UNSPEC
 bss_policy[nl80211.BSS_BEACON_TSF].type = nl.NLA_U64
 bss_policy[nl80211.BSS_CHAN_WIDTH].type = nl.NLA_U32
+bss_policy[nl80211.BSS_PRESP_DATA].type = nl.NLA_FLAG
 
 class bss(nl80211_object):
 	pass
@@ -68,7 +69,7 @@ class bss_list(custom_handler):
                 m = self._access.alloc_genlmsg(nl80211.CMD_GET_SCAN, flags)
                 nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
 		self._access.send(m, self)
-		
+
 	def handle(self, msg, arg):
 		try:
 			e, attrs = genl.py_genlmsg_parse(nl.nlmsg_hdr(msg), 0, nl80211.ATTR_MAX, None)
