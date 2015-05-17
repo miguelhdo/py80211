@@ -281,11 +281,6 @@ class nl80211_object(object):
 	def attrs(self):
 		return self._attrs
 
-	##
-	# Gets specified attribute.
-	def get_nlattr(self, attr_id):
-		return self._attrs[attr_id]
-
 ##
 # The managed object can be used for objects whose data is obtained
 # using a specific command. The derived class needs to specify the
