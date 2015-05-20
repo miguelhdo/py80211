@@ -18,6 +18,7 @@
 #
 import sys
 import traceback
+import struct
 
 import netlink.capi as nl
 import netlink.core as nlc
@@ -111,6 +112,15 @@ class wiphy(nl80211_managed_object):
 	def __init__(self, access, attrs):
 		nl80211_managed_object.__init__(self, access, attrs, nl80211_policy)
 		self._phynum = nl.nla_get_u32(attrs[nl80211.ATTR_WIPHY])
+
+	def post_store_attrs(self, attrs):
+		# cipher suites are actually C-array of u32 so using struct module
+		# to obtain the list of cipher suites.
+		if not nl80211.ATTR_CIPHER_SUITES in attrs:
+			return
+		data = self.attrs[nl80211.ATTR_CIPHER_SUITES]
+		fmt = len(data) / 4 * 'i'
+		self.attrs[nl80211.ATTR_CIPHER_SUITES] = list(struct.unpack(fmt, data))
 
 	def put_obj_id(self, msg):
 		nl.nla_put_u32(msg._msg, nl80211.ATTR_WIPHY, self.phynum)
