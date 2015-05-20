@@ -23,13 +23,12 @@ from abc import *
 import netlink.capi as nl
 import netlink.genl.capi as genl
 import netlink.core as nlc
+
 import generated.defs as nl80211
 from generated import strmap
 
 NLA_NUL_STRING = nl.NLA_NESTED + 2
 NLA_BINARY = nl.NLA_NESTED + 3
-
-from abc import *
 
 ##
 # Exception which is raised when netlink socket is already
