@@ -26,6 +26,7 @@ import generated.defs as nl80211
 
 from generated.policy import nl80211_policy
 from base import *
+import factory
 
 bss_policy = nl.nla_policy_array(nl80211.BSS_MAX + 1)
 bss_policy[nl80211.BSS_TSF].type = nl.NLA_U64
@@ -76,7 +77,7 @@ class bss_list(custom_handler):
 			if not nl80211.ATTR_BSS in attrs:
 				return
 			e, nattrs = nl.py_nla_parse_nested(len(bss_policy), attrs[nl80211.ATTR_BSS], bss_policy)
-			self._bss.append(bss(nattrs, bss_policy))
+			self._bss.append(factory.get_inst().create(bss, nattrs, bss_policy))
 		except Exception as e:
 			(t,v,tb) = sys.exc_info()
 			print v.message

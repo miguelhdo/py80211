@@ -26,6 +26,7 @@ import netlink.core as nlc
 
 import generated.defs as nl80211
 from generated import strmap
+import factory
 
 NLA_NUL_STRING = nl.NLA_NESTED + 2
 NLA_BINARY = nl.NLA_NESTED + 3
@@ -162,7 +163,7 @@ class nl80211_object(object):
 			if aid in self.nest_attr_map.keys():
 				(nest_class, max_nest, nest_policy) = self.nest_attr_map[aid]
 			e, nattr = nl.py_nla_parse_nested(max_nest, attr, nest_policy)
-			return nest_class(nattr, nest_policy)
+			return factory.get_inst().create(nest_class, nattr, nest_policy)
 		except Exception as e:
 			return nl.nla_type(attr)
 

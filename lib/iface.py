@@ -27,6 +27,7 @@ import generated.defs as nl80211
 
 from generated.policy import nl80211_policy
 from base import *
+import factory
 
 class interface(nl80211_managed_object):
 	_cmd = nl80211.CMD_GET_INTERFACE
@@ -62,7 +63,7 @@ class interface_list(custom_handler):
 				if wdevid in self._iface.keys():
 					self._iface[wdevid].store_attrs(attrs)
 				else:
-					iface = interface(self._access, attrs)
+					iface = factory.get_inst().create(interface, self._access, attrs)
 					self._iface[iface.wdevid] = iface
 			return nl.NL_SKIP
 		except Exception as e:

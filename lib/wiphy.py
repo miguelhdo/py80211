@@ -27,6 +27,7 @@ import generated.defs as nl80211
 
 from generated.policy import nl80211_policy
 from base import *
+import factory
 
 rate_policy = nl.nla_policy_array(nl80211.BITRATE_ATTR_MAX + 1)
 rate_policy[nl80211.BITRATE_ATTR_RATE].type = nl.NLA_U32
@@ -159,7 +160,7 @@ class wiphy_list(custom_handler):
 				if phynum in self._wiphy.keys():
 					self._wiphy[phynum].store_attrs(attrs)
 				else:
-					phy = wiphy(self._access, attrs)
+					phy = factory.get_inst().create(wiphy, self._access, attrs)
 					self._wiphy[phy.phynum] = phy
 			return nl.NL_SKIP
 		except Exception as e:

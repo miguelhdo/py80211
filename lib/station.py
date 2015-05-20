@@ -27,6 +27,7 @@ import generated.defs as nl80211
 
 from generated.policy import nl80211_policy
 from base import *
+import factory
 
 bss_param_policy = nl.nla_policy_array(nl80211.STA_BSS_PARAM_MAX + 1)
 bss_param_policy[nl80211.STA_BSS_PARAM_CTS_PROT].type = nl.NLA_FLAG
@@ -96,7 +97,7 @@ class station_stats(nl80211_object):
 
 	def post_store_attrs(self, attrs):
 		if nl80211.STA_INFO_STA_FLAGS in attrs:
-			flags = sta_flags(self.attrs[nl80211.STA_INFO_STA_FLAGS])
+			flags = factory.get_inst().create(sta_flags, self.attrs[nl80211.STA_INFO_STA_FLAGS])
 			self._attrs[nl80211.STA_INFO_STA_FLAGS] = flags
 
 class sta_flags(object):
@@ -159,7 +160,7 @@ class station_list(custom_handler):
 	def handle(self, msg, arg):
 		try:
 			e, attrs = genl.py_genlmsg_parse(nl.nlmsg_hdr(msg), 0, nl80211.ATTR_MAX, None)
-			sta = station(self._ifidx, None, self._access, attrs)
+			sta = factory.get_inst().create(station, self._ifidx, None, self._access, attrs)
 			s = self.store_station(sta)
 			return nl.NL_SKIP
 		except Exception as e:
