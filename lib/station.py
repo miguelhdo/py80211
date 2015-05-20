@@ -93,7 +93,9 @@ class station_stats(nl80211_object):
 	}
 	def __init__(self, attrs, policy):
 		nl80211_object.__init__(self, attrs, policy)
-		if nl80211.STA_INFO_STA_FLAGS in self.attrs:
+
+	def post_store_attrs(self, attrs):
+		if nl80211.STA_INFO_STA_FLAGS in attrs:
 			flags = sta_flags(self.attrs[nl80211.STA_INFO_STA_FLAGS])
 			self._attrs[nl80211.STA_INFO_STA_FLAGS] = flags
 
