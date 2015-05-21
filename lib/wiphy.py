@@ -167,3 +167,7 @@ class wiphy_list(custom_handler):
 			(t,v,tb) = sys.exc_info()
 			print v.message
 			traceback.print_tb(tb)
+
+	@property
+	def wiphys(self):
+		return self._wiphy.values()
