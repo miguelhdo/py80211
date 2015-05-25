@@ -105,6 +105,6 @@ class py80211_server(object):
 if __name__ == "__main__":
 	ns = pyro.naming.locateNS()
 	server = py80211_server()
-	factory.use_remote(server._daemon)
+	factory.set_inst(factory.py80211_pyro_factory(server._daemon))
 	print('server started')
 	server._daemon.requestLoop()

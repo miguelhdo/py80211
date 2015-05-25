@@ -16,21 +16,29 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import Pyro4 as pyro
+from abc import *
+
+class py80211_factory(object):
+	__metaclass__ = ABCMeta
+
+	@abstractmethod
+	def create(self, cls, *args, **kwargs):
+		pass
 
 ##
 # default py80211_factory which simply instantiates the class
 # provided.
-class py80211_factory(object):
+class py80211_simple_factory(py80211_factory):
 	def create(self, cls, *args, **kwargs):
 		return cls(*args, **kwargs)
 
 ##
 # factory for remote use of py80211 which instantiates the class
 # and registers the object instance with pyro daemon.
-class py80211_remote_factory(object):
+class py80211_pyro_factory(py80211_factory):
 	def __init__(self, daemon):
 		if daemon == None:
+			import Pyro4 as pyro
 			daemon = pyro.Daemon()
 		self._daemon = daemon
 
@@ -39,10 +47,12 @@ class py80211_remote_factory(object):
 		self._daemon.register(obj)
 		return obj
 
-_inst = py80211_factory()
+_inst = py80211_simple_factory()
 
-def use_remote(daemon=None):
-	globals()['_inst'] = py80211_remote_factory(daemon)
+def set_inst(factory):
+	if not isinstance(factory, py80211_factory):
+		raise Exception('must be py80211_factory derived class')
+	globals()['_inst'] = factory
 
 def get_inst():
 	return globals()['_inst']
