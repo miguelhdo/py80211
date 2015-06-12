@@ -204,3 +204,18 @@ class sched_scan_start(scan_start_base):
 		if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
 			self.scan_busy = False
 			return nl.NL_SKIP
+
+class sched_scan_stop(scan_cmd_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(sched_scan_stop, self).__init__(ifidx, level)
+		self._nl_cmd = nl80211.CMD_STOP_SCHED_SCAN
+
+	def send(self):
+		self._prepare_cmd()
+		self._send_and_wait()
+
+	def handle(self, msg, arg):
+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+		if genlh.cmd in [ nl80211.CMD_SCHED_SCAN_STOPPED ]:
+			self.scan_busy = False
+		return nl.NL_SKIP
