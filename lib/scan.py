@@ -188,6 +188,7 @@ class sched_scan_start(scan_start_base):
 		super(sched_scan_start, self).__init__(ifidx, level)
 		self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
 		self._interval = None
+		self._matches = None
 
 	def _add_scan_attrs(self):
 		super(sched_scan_start, self)._add_scan_attrs(self)
@@ -196,6 +197,29 @@ class sched_scan_start(scan_start_base):
 
 	def set_interval(self, interval):
 		self._interval = interval
+
+	def add_matches(self, matches):
+		self._matches = matches
+
+	def _add_matches_attrs(self):
+		if self._matches:
+			i = 0
+
+			matchset = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_MATCH)
+			for match in self._matches:
+				nest = nl.nla_nest_start(self._nl_msg._msg, i)
+				if 'ssid' in match:
+					nl.nla_put(self._nl_msg._msg, nl80211.SCHED_SCAN_MATCH_ATTR_SSID, match['ssid'])
+				i += 1
+				nl.nla_nest_end(self._nl_msg._msg, nest)
+
+			nl.nla_nest_end(self._nl_msg._msg, matchset)
+
+	def send(self):
+		self._prepare_cmd()
+		self._add_scan_attrs()
+		self._add_matches_attrs()
+		self._send_and_wait()
 
 	def handle(self, msg, arg):
 		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
