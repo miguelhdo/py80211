@@ -181,4 +181,26 @@ class scan_request(scan_start_base):
 		# A regular scan is complete when we get scan results
 		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
 			self.scan_busy = False
+		return nl.NL_SKIP
+
+class sched_scan_start(scan_start_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(sched_scan_start, self).__init__(ifidx, level)
+		self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
+		self._interval = None
+
+	def _add_scan_attrs(self):
+		super(sched_scan_start, self)._add_scan_attrs(self)
+		if self._interval != None:
+			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
+
+	def set_interval(self, interval):
+		self._interval = interval
+
+	def handle(self, msg, arg):
+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+
+		# A schedule scan is complete immediately when it gets started
+		if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
+			self.scan_busy = False
 			return nl.NL_SKIP
