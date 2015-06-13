@@ -66,9 +66,9 @@ class bss_list(custom_handler):
 
 	def refresh(self):
 		self._bss = []
-                flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK | nlc.NLM_F_DUMP
-                m = self._access.alloc_genlmsg(nl80211.CMD_GET_SCAN, flags)
-                nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
+		flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK | nlc.NLM_F_DUMP
+		m = self._access.alloc_genlmsg(nl80211.CMD_GET_SCAN, flags)
+		nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
 		self._access.send(m, self)
 
 	def handle(self, msg, arg):
@@ -84,14 +84,64 @@ class bss_list(custom_handler):
 			traceback.print_tb(tb)
 		return nl.NL_SKIP
 
-class scan_request(custom_handler):
+class scan_cmd_base(custom_handler):
 	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
-		self._ifidx = ifidx
 		self._access = access80211(level)
+		self._nl_cmd = None
+		self._ifidx = ifidx
+
+	def _wait_for_completion(self):
+		while self.scan_busy:
+			self._access._sock.recvmsgs(self._access._rx_cb)
+
+	def _prepare_cmd(self):
+		if self._nl_cmd == None:
+			raise Exception("sub-class must set _nl_cmd")
+
+		flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK
+		self._nl_msg = self._access.alloc_genlmsg(self._nl_cmd, flags)
+		nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_IFINDEX, self._ifidx)
+
+	def _send_and_wait(self):
+		self.scan_busy = True
+		self._access.disable_seq_check()
+		mcid = self._access.subscribe_multicast('scan')
+		ret = self._access.send(self._nl_msg, self)
+		if ret < 0:
+			self.scan_busy = False
+			return ret
+
+		self._wait_for_completion()
+		self._access.drop_multicast(mcid)
+		return 0
+
+class scan_start_base(scan_cmd_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(scan_start_base, self).__init__(ifidx, level)
 		self._ssids = None
 		self._freqs = None
 		self._flags = 0
 		self._ies = None
+
+	def _add_scan_attrs(self):
+		if self._ssids:
+			i = 0
+			nest = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCAN_SSIDS)
+			for ssid in self._ssids:
+				nl.nla_put(self._nl_msg._msg, i, ssid)
+				i += 1
+			nl.nla_nest_end(self._nl_msg._msg, nest)
+		if self._freqs:
+			i = 0
+			nest = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCAN_FREQUENCIES)
+			for freq in self._freqs:
+				nl.nla_put_u32(self._nl_msg._msg, i, freq)
+				i += 1
+			nl.nla_nest_end(self._nl_msg._msg, nest)
+		if self._flags != 0:
+			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCAN_FLAGS, self._flags)
+		if self._ies:
+			nl.nla_put(self._nl_msg._msg, nl80211.ATTR_IE, self._ies)
 
 	def add_ssids(self, ssids):
 		if self._ssids == None:
@@ -115,49 +165,81 @@ class scan_request(custom_handler):
 	def set_flags(self, flags):
 		self._flags = flags
 
-	def wait_for_scan_completion(self):
-		while self.scan_busy:
-			self._access._sock.recvmsgs(self._access._rx_cb)
-
 	def send(self):
-		flags = nlc.NLM_F_REQUEST | nlc.NLM_F_ACK
-		m = self._access.alloc_genlmsg(nl80211.CMD_TRIGGER_SCAN, flags)
-		nl.nla_put_u32(m._msg, nl80211.ATTR_IFINDEX, self._ifidx)
+		self._prepare_cmd()
+		self._add_scan_attrs()
+		self._send_and_wait()
 
-		if self._ssids:
-			i = 0
-			nest = nl.nla_nest_start(m._msg, nl80211.ATTR_SCAN_SSIDS)
-			for ssid in self._ssids:
-				nl.nla_put(m._msg, i, ssid)
-				i += 1
-			nl.nla_nest_end(m._msg, nest)
-		if self._freqs:
-			i = 0
-			nest = nl.nla_nest_start(m._msg, nl80211.ATTR_SCAN_FREQUENCIES)
-			for freq in self._freqs:
-				nl.nla_put_u32(m._msg, i, freq)
-				i += 1
-			nl.nla_nest_end(m._msg, nest)
-		if self._flags != 0:
-			nl.nla_put_u32(m._msg, nl80211.ATTR_SCAN_FLAGS, self._flags)
-		if self._ies:
-			nl.nla_put(m._msg, nl80211.ATTR_IE, self._ies)
-
-		self.scan_busy = True
-		self._access.disable_seq_check()
-		mcid = self._access.subscribe_multicast('scan')
-		ret = self._access.send(m, self)
-		if ret < 0:
-			self.scan_busy = False
-			return ret
-
-		self.wait_for_scan_completion()
-		self._access.drop_multicast(mcid)
-		return 0
+class scan_request(scan_start_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(scan_request, self).__init__(ifidx, level)
+		self._nl_cmd = nl80211.CMD_TRIGGER_SCAN
 
 	def handle(self, msg, arg):
 		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+
+		# A regular scan is complete when we get scan results
 		if genlh.cmd in [ nl80211.CMD_SCAN_ABORTED, nl80211.CMD_NEW_SCAN_RESULTS ]:
 			self.scan_busy = False
 		return nl.NL_SKIP
 
+class sched_scan_start(scan_start_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(sched_scan_start, self).__init__(ifidx, level)
+		self._nl_cmd = nl80211.CMD_START_SCHED_SCAN
+		self._interval = None
+		self._matches = None
+
+	def _add_scan_attrs(self):
+		super(sched_scan_start, self)._add_scan_attrs(self)
+		if self._interval != None:
+			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
+
+	def set_interval(self, interval):
+		self._interval = interval
+
+	def add_matches(self, matches):
+		self._matches = matches
+
+	def _add_matches_attrs(self):
+		if self._matches:
+			i = 0
+
+			matchset = nl.nla_nest_start(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_MATCH)
+			for match in self._matches:
+				nest = nl.nla_nest_start(self._nl_msg._msg, i)
+				if 'ssid' in match:
+					nl.nla_put(self._nl_msg._msg, nl80211.SCHED_SCAN_MATCH_ATTR_SSID, match['ssid'])
+				i += 1
+				nl.nla_nest_end(self._nl_msg._msg, nest)
+
+			nl.nla_nest_end(self._nl_msg._msg, matchset)
+
+	def send(self):
+		self._prepare_cmd()
+		self._add_scan_attrs()
+		self._add_matches_attrs()
+		self._send_and_wait()
+
+	def handle(self, msg, arg):
+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+
+		# A schedule scan is complete immediately when it gets started
+		if genlh.cmd in [ nl80211.CMD_START_SCHED_SCAN ]:
+			self.scan_busy = False
+			return nl.NL_SKIP
+
+class sched_scan_stop(scan_cmd_base):
+	def __init__(self, ifidx, level=nl.NL_CB_DEFAULT):
+		super(sched_scan_stop, self).__init__(ifidx, level)
+		self._nl_cmd = nl80211.CMD_STOP_SCHED_SCAN
+
+	def send(self):
+		self._prepare_cmd()
+		self._send_and_wait()
+
+	def handle(self, msg, arg):
+		genlh = genl.genlmsg_hdr(nl.nlmsg_hdr(msg))
+		if genlh.cmd in [ nl80211.CMD_SCHED_SCAN_STOPPED ]:
+			self.scan_busy = False
+		return nl.NL_SKIP
