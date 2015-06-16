@@ -191,7 +191,7 @@ class sched_scan_start(scan_start_base):
 		self._matches = None
 
 	def _add_scan_attrs(self):
-		super(sched_scan_start, self)._add_scan_attrs(self)
+		super(sched_scan_start, self)._add_scan_attrs()
 		if self._interval != None:
 			nl.nla_put_u32(self._nl_msg._msg, nl80211.ATTR_SCHED_SCAN_INTERVAL, self._interval)
 
