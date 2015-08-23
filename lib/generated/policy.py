@@ -2,7 +2,7 @@
 # This file is generated using extract.py using pycparser
 ###########################################################
 # revision:
-#	5392bc6 Linux 3.19.1
+#	b953c0d Linux 4.1
 ###########################################################
 from netlink.capi import *
 from defs import *
@@ -28,6 +28,32 @@ IEEE80211_QOS_MAP_LEN_MAX = IEEE80211_QOS_MAP_LEN_MIN + 2 * IEEE80211_QOS_MAP_MA
 # policy: nl80211_policy
 #
 nl80211_policy = nla_policy_array(NUM_NL80211_ATTR)
+nl80211_policy[ATTR_GENERATION].type = NLA_U32
+nl80211_policy[ATTR_MAX_NUM_SCAN_SSIDS].type = NLA_U8
+nl80211_policy[ATTR_SUPPORT_AP_UAPSD].type = NLA_FLAG
+nl80211_policy[ATTR_MAX_MATCH_SETS].type = NLA_U8
+nl80211_policy[ATTR_FEATURE_FLAGS].type = NLA_U32
+nl80211_policy[ATTR_INTERFACE_COMBINATIONS].type = NLA_NESTED
+nl80211_policy[ATTR_SUPPORTED_COMMANDS].type = NLA_NESTED
+nl80211_policy[ATTR_SUPPORTED_COMMANDS].list_type = NLA_U32
+nl80211_policy[ATTR_WOWLAN_TRIGGERS_SUPPORTED].type = NLA_NESTED
+nl80211_policy[ATTR_WOWLAN_TRIGGERS_SUPPORTED].single = True
+nl80211_policy[ATTR_MAX_SCAN_IE_LEN].type = NLA_U16
+nl80211_policy[ATTR_MAX_NUM_PMKIDS].type = NLA_U8
+nl80211_policy[ATTR_SUPPORT_IBSS_RSN].type = NLA_FLAG
+nl80211_policy[ATTR_MAX_REMAIN_ON_CHANNEL_DURATION].type = NLA_U32
+nl80211_policy[ATTR_WIPHY_ANTENNA_AVAIL_TX].type = NLA_U32
+nl80211_policy[ATTR_WIPHY_ANTENNA_AVAIL_RX].type = NLA_U32
+nl80211_policy[ATTR_MAX_NUM_SCHED_SCAN_SSIDS].type = NLA_U8
+nl80211_policy[ATTR_MAX_SCHED_SCAN_IE_LEN].type = NLA_U16
+nl80211_policy[ATTR_MAX_CSA_COUNTERS].type = NLA_U8
+nl80211_policy[ATTR_SOFTWARE_IFTYPES].type = NLA_NESTED
+nl80211_policy[ATTR_TX_FRAME_TYPES].type = NLA_NESTED
+nl80211_policy[ATTR_TX_FRAME_TYPES].map = True
+nl80211_policy[ATTR_TX_FRAME_TYPES].list_type = NLA_U16
+nl80211_policy[ATTR_RX_FRAME_TYPES].type = NLA_NESTED
+nl80211_policy[ATTR_RX_FRAME_TYPES].map = True
+nl80211_policy[ATTR_RX_FRAME_TYPES].list_type = NLA_U16
 nl80211_policy[ATTR_WIPHY].type = NLA_U32
 nl80211_policy[ATTR_WIPHY_NAME].type = NLA_NUL_STRING
 nl80211_policy[ATTR_WIPHY_NAME].min_len = 20 - 1
@@ -204,32 +230,10 @@ nl80211_policy[ATTR_USER_PRIO].type = NLA_U8
 nl80211_policy[ATTR_ADMITTED_TIME].type = NLA_U16
 nl80211_policy[ATTR_SMPS_MODE].type = NLA_U8
 nl80211_policy[ATTR_MAC_MASK].min_len = ETH_ALEN
-nl80211_policy[ATTR_GENERATION].type = NLA_U32
-nl80211_policy[ATTR_MAX_NUM_SCAN_SSIDS].type = NLA_U8
-nl80211_policy[ATTR_SUPPORT_AP_UAPSD].type = NLA_FLAG
-nl80211_policy[ATTR_MAX_MATCH_SETS].type = NLA_U8
-nl80211_policy[ATTR_FEATURE_FLAGS].type = NLA_U32
-nl80211_policy[ATTR_INTERFACE_COMBINATIONS].type = NLA_NESTED
-nl80211_policy[ATTR_SUPPORTED_COMMANDS].type = NLA_NESTED
-nl80211_policy[ATTR_SUPPORTED_COMMANDS].list_type = NLA_U32
-nl80211_policy[ATTR_WOWLAN_TRIGGERS_SUPPORTED].type = NLA_NESTED
-nl80211_policy[ATTR_WOWLAN_TRIGGERS_SUPPORTED].single = True
-nl80211_policy[ATTR_MAX_SCAN_IE_LEN].type = NLA_U16
-nl80211_policy[ATTR_MAX_NUM_PMKIDS].type = NLA_U8
-nl80211_policy[ATTR_SUPPORT_IBSS_RSN].type = NLA_FLAG
-nl80211_policy[ATTR_MAX_REMAIN_ON_CHANNEL_DURATION].type = NLA_U32
-nl80211_policy[ATTR_WIPHY_ANTENNA_AVAIL_TX].type = NLA_U32
-nl80211_policy[ATTR_WIPHY_ANTENNA_AVAIL_RX].type = NLA_U32
-nl80211_policy[ATTR_MAX_NUM_SCHED_SCAN_SSIDS].type = NLA_U8
-nl80211_policy[ATTR_MAX_SCHED_SCAN_IE_LEN].type = NLA_U16
-nl80211_policy[ATTR_MAX_CSA_COUNTERS].type = NLA_U8
-nl80211_policy[ATTR_SOFTWARE_IFTYPES].type = NLA_NESTED
-nl80211_policy[ATTR_TX_FRAME_TYPES].type = NLA_NESTED
-nl80211_policy[ATTR_TX_FRAME_TYPES].map = True
-nl80211_policy[ATTR_TX_FRAME_TYPES].list_type = NLA_U16
-nl80211_policy[ATTR_RX_FRAME_TYPES].type = NLA_NESTED
-nl80211_policy[ATTR_RX_FRAME_TYPES].map = True
-nl80211_policy[ATTR_RX_FRAME_TYPES].list_type = NLA_U16
+nl80211_policy[ATTR_WIPHY_SELF_MANAGED_REG].type = NLA_FLAG
+nl80211_policy[ATTR_NETNS_FD].type = NLA_U32
+nl80211_policy[ATTR_SCHED_SCAN_DELAY].type = NLA_U32
+nl80211_policy[ATTR_REG_INDOOR].type = NLA_FLAG
 #
 # policy: nl80211_key_policy
 #
